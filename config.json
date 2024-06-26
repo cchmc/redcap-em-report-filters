@@ -1,0 +1,41 @@
+{
+    "name": "Report Filters",
+    "tt_name": "module_name",
+    "description": "Add configurable column filters to a report",
+    "tt_description": "module_desc",
+    "documentation": "README.md",
+    "namespace": "JFortriede\\ReportFilters",
+    "authors": [
+        {
+            "name": "Joshua Fortriede",
+            "email": "Joshua.Fortriede@cchmc.org",
+            "institution": "Cincinnati Children's Hospital"
+        }
+    ],
+    "permissions": [
+        "redcap_every_page_top"
+    ],
+    "framework-version": 9,
+    "project-settings": [
+        {
+            "key": "info",
+            "name": "This module is configured via the edit report screen.",
+            "tt_name": "module_info",
+            "type": "descriptive"
+        },
+		{
+			"key" : "debug-mode",
+			"name" : "Set Debug Mode level. This will log debug or info messages to the browser console.",
+			"type" : "radio",
+			"choices" : [
+				{ "value" : 0, "name" : "Off" },
+                { "value" : 10, "name" : "Debug" },
+                { "value" : 20, "name" : "Info" }
+			],
+			"super-users-only" : true
+		}
+    ],
+    "compatibility": {
+        "redcap-version-min": "12.0.4"
+    }
+}

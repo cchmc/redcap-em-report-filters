@@ -1,0 +1,8 @@
+/* table#report_table thead tr, table#report_table thead tr th{
+    height: 0px;
+}
+
+table#report_table thead { position: sticky; top: 0; z-index: 100}
+
+
+#report_table_wrapper table:not(#report_table) thead { display: none;} */
