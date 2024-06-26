@@ -1,6 +1,6 @@
 # Report Filters - Redcap External Module
 
-More complete end-user facing documentation can be found [here](https://aanunez.io/docs/report-tweaks/)
+More complete end-user facing documentation can be found [here](https://github.com/cchmc/redcap-em-report-filters)
 
 ## What does it do?
 
