@@ -15,7 +15,7 @@
     "permissions": [
         "redcap_every_page_top"
     ],
-    "framework-version": 9,
+    "framework-version": 13,
     "project-settings": [
         {
             "key": "info",
@@ -35,6 +35,6 @@
 		}
     ],
     "compatibility": {
-        "redcap-version-min": "12.0.4"
+        "redcap-version-min": "13.7.2"
     }
 }
