@@ -127,6 +127,108 @@ $(document).ready(() => {
     Full build out of the EM occurs here, we re-invoke if changing pages
     on a multipage report. 
     */
+
+    
+    const insertDownloadBtn = () => {
+        let html = '<a href="#" id="rfDownloadDataBtn" class="btn btn-secondary btn-sm mb-1" role="button"><i class="fas fa-download"></i></a>';
+        if ($(".report_pagenum_div").length) { // Pagination
+            $(".report_pagenum_div").first().before(html);
+        } else { // One Page
+            $("#report_table_wrapper").prepend(html);
+        }
+        $("#rfDownloadDataBtn").popover({
+            content: module['tt']["button_download"],
+            trigger: "hover"
+        });
+        $("#rfDownloadDataBtn").on("click", downloadDataModal);
+    }
+
+
+    const downloadData = () => {
+        // Find all visible headers and get the field name
+        let headers = []
+        
+        if ($('#report_display_header').val() == 'both'){
+            headers = $("#report_table tr:first-child th:visible").map((_, el) => $(el).contents()[0].data + " (" + $(el).contents()[1].innerText + ")").get();
+        }
+        // else if ($('input[name="header"]:checked').val() == 'label'){
+            // headers = $("#report_table tr:first-child th:visible").map((_, el) => $(el).contents()[0].data).get();
+        // }
+        else if ($('#report_display_header').val() == 'raw'){
+            headers = $("#report_table tr:first-child th:visible").map((_, el) => $(el).contents()[1].innerText).get();
+        }
+        else{
+            headers = $("#report_table tr:first-child th:visible").map((_, el) => $(el).contents()[0].data).get();
+        }
+        // For every cell organize it into our matrix/grid
+        let data = $("#report_table td:visible").map((index, value) => {
+            const prefix = index % headers.length == 0 ? '\n' : ',';
+            if ($('#report_display_data').val() == 'label'){
+                cell_value = $(value).contents()[0].data || $(value).contents()[0].text
+            }
+            else if ($(value).contents().length > 1 && $('#report_display_data').val() == 'raw'){
+                cell_value = $(value).contents()[1].innerText.replaceAll(/[()]/g,"")
+            }
+            else if ($(value).contents().length > 1 && $('#report_display_data').val() == 'both'){    
+                cell_value = ($(value).contents()[0].data || $(value).contents()[0].text) + " (" + $(value).contents()[1].innerText.replaceAll(/[()]/g,"") + ")"
+            }
+            else{
+                cell_value = $(value).text()
+            }
+
+            return prefix + cell_value;
+        });
+
+        // put data in a file and download it
+        
+        // Create a CSV string
+        let csvContent = headers.join(',') + data.get().join('');
+        
+        // Create a Blob object with the CSV data
+        let blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        
+        // Create a temporary URL for the Blob
+        let url = URL.createObjectURL(blob);
+        
+        // Create a link element and set its attributes
+        let link = document.createElement('a');
+        link.href = url;
+        link.download = module.project_title + '-' + module.report_title + '.csv';
+        
+        // Simulate a click on the link to trigger the download
+        link.click();
+        
+        // Clean up the temporary URL
+        URL.revokeObjectURL(url);
+
+    }
+
+    const downloadDataModal = () => {
+        dialog_content = ""
+        if (module.report_display_header == "BOTH"){
+            dialog_content += "<font style='font-size:14px; margin-right:10px'>What do you want to include in the header?</font>"
+            dialog_content += "<select id='report_display_header'>"
+            dialog_content += "<option value='both' selected>Label and Raw Data</option>"
+            dialog_content += "<option value='label'>Label Only</option>"
+            dialog_content += "<option value='raw'>Raw Data</option>"
+            dialog_content += "</select></br></br>"
+        }
+        if (module.report_display_data == "BOTH"){
+            dialog_content += "<font style='font-size:14px; margin-right:24px'>What do you want to include in the data? </font>"
+            dialog_content += "<select id='report_display_data'>"
+            dialog_content += "<option value='both' selected>Label and Raw Data</option>"
+            dialog_content += "<option value='label'>Label Only</option>"
+            dialog_content += "<option value='raw'>Raw Data</option>"
+            dialog_content += "</select></br>"
+        }
+        let download_button = '<a href="#" id="rfDownloadBtn" class="btn btn-secondary btn-sm mb-1" role="button" style="float: right; margin-top: 10px"><img src="'+module.APP_PATH_IMAGES+'download_csvdata.gif"></a>';
+
+        simpleDialog(dialog_content+module.citation+download_button,'Download Report',null,650)
+        $("#rfDownloadBtn").on("click", downloadData);
+
+        return
+    }   
+
     const waitForLoad = () => {
         
         if ($("#report_table thead").length == 0 ||
@@ -138,8 +240,6 @@ $(document).ready(() => {
         if(length(module.settings.columns) > 0){
             createFilterRow();
         }
-        
-
 
         // Adjust table columns for new filter row 
         rcDataTable.columns.adjust().draw()
@@ -155,6 +255,8 @@ $(document).ready(() => {
                 }
             }
         }
+        insertDownloadBtn()
+
         return 
     }
 
