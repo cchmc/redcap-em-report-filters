@@ -5,6 +5,7 @@ namespace JFortriede\ReportFilters;
 use ExternalModules\AbstractExternalModule;
 use REDCap;
 use DataExport;
+use RCView;
 
 class ReportFilters extends AbstractExternalModule
 {
@@ -66,13 +67,6 @@ class ReportFilters extends AbstractExternalModule
 
         // // Escape 3 feilds that are html enabled 
         $new = json_decode($_POST['settings'], true);
-        // if (!empty($new['_wb'])) {
-        //     foreach ($new['_wb'] as $index => $data) {
-        //         foreach (['footer', 'modalBtn', 'modalText'] as $html) {
-        //             $new['_wb'][$index][$html] = REDCap::escapeHtml($data[$html]);
-        //         }
-        //     }
-        // }
 
         $json[$_POST['report']] = $new;
         $this->setProjectSetting('json', json_encode($json));
@@ -87,6 +81,39 @@ class ReportFilters extends AbstractExternalModule
         return $this->getProjectSetting( 'debug-mode' );
     }
 
+    
+    private function getCitatationHTML(){
+        global $lang;
+        ## NOTICES FOR CITATIONS (GRANT AND/OR SHARED LIBRARY) AND DATE-SHIFT NOTICE
+        $citationText = "";
+        // Do not display grant statement unless $grant_cite has been set for this project.
+        if ($grant_cite != "") {
+            $citationText .= RCView::li(['class'=>'mb-2'],
+                    "{$lang['data_export_tool_297']} <b>$grant_cite</b>{$lang['period']}"
+                    );
+        }
+
+        // REDCap 2009 publication citation
+        $citationText .= RCView::li(['class'=>'mb-2'],
+            $lang['data_export_tool_298'] . " <a href='https://redcap.vanderbilt.edu/consortium/cite.php' target='_blank' style='text-decoration:underline;'>{$lang['data_export_tool_301']}</a>"
+        );
+
+        // Wrap all citations in an ordered list
+        $citationText = RCView::fieldset(array('style'=>'margin-top:10px;padding-left:8px;background-color:#FFFFD3;border:1px solid #FFC869;color:#B00000;'),
+            RCView::legend(array('class'=>'font-weight-bold fs14'),
+                '<i class="fa-solid fa-book"></i> '.$lang['data_export_tool_295'] . ($grant_cite != "" ? " ".$lang['data_export_tool_296'] : "")
+            ) .
+            RCView::div(array('class'=>'p-1 mt-1'),
+                $lang['data_export_tool_299']
+            ) .
+            RCView::ol(array('class'=>'ms-3 ps-1 pe-3 pt-2 pb-0'),
+                $citationText
+            )
+        );
+        return $citationText;
+
+
+    }
 
     private function loadSettings($report = Null)
     {
@@ -110,7 +137,9 @@ class ReportFilters extends AbstractExternalModule
                 "record_id" => REDCap::getRecordIdField(),
                 "settings" => $json,
                 "debug_mode" => $this->getDebugMode(),
-                "username" => ($this->getUser())->getUsername()
+                "project_title" => REDCAP::getProjectTitle(),
+                "username" => ($this->getUser())->getUsername(),
+                "APP_PATH_IMAGES" => APP_PATH_IMAGES,
                 // "eventMap" => $this->makeEventMap()
             ]);
         }
@@ -118,19 +147,19 @@ class ReportFilters extends AbstractExternalModule
         // Add in Report fields (variables)
         $details = DataExport::getReports($report);
         $data['report_fields'] = $details['fields'];
-        // $data['report'] = $details;
-        
+        $data['report_title'] = $details['title'];
+        $data['report_display_data'] = $details['report_display_data'];
+        $data['report_display_header'] = $details['report_display_header'];        
+        $data['citation'] = $this->getCitatationHTML();
+
         $data['tt']=[];
 
-        $tt_array = array("add_filter", "add_filter_checkbox_title");
+        $tt_array = array("add_filter", "add_filter_checkbox_title","button_download");
         
         foreach ($tt_array as $field){
             $data['tt'][$field]=$this->tt($field);
         }
 
-        //     "add_filter" => $this->tt('add_filter')
-        //     "add_filter_checkbox_title" => $this->('')
-        // ];
         // Pass down to JS
         $data = json_encode($data);
         echo "<script>Object.assign({$this->jsGlobal}, {$data});</script>";

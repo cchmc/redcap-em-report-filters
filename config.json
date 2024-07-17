@@ -15,7 +15,7 @@
     "permissions": [
         "redcap_every_page_top"
     ],
-    "framework-version": 9,
+    "framework-version": 13,
     "project-settings": [
         {
             "key": "info",
@@ -25,17 +25,16 @@
         },
 		{
 			"key" : "debug-mode",
-			"name" : "Set Debug Mode level. This will log debug or info messages to the browser console.",
+			"name" : "Set Debug Mode level. This will log debug or info messages to the browser console",
 			"type" : "radio",
 			"choices" : [
 				{ "value" : 0, "name" : "Off" },
                 { "value" : 10, "name" : "Debug" },
                 { "value" : 20, "name" : "Info" }
-			],
-			"super-users-only" : true
+			]
 		}
     ],
     "compatibility": {
-        "redcap-version-min": "12.0.4"
+        "redcap-version-min": "13.7.2"
     }
 }
