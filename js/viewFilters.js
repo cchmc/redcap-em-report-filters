@@ -1,6 +1,7 @@
 $(document).ready(() => {
     const module = ExternalModules.JFortriede.ReportFilters;
-    
+    module.settings.activeFilters=[]
+
     if(module.debug_mode && module.debug_mode <= 20){   // Write if Debug_mode is Info or Debug
         console.log("Report Filters Module Loaded");
     }
@@ -32,7 +33,6 @@ $(document).ready(() => {
         }
         // Get the search data for the first column and add to the select list
 
-        
         var select = $('<select id="filter_col_'+col_header+'" style="width:100px"/>')
             .on( 'change', function () {
                 let search_value = ''
@@ -40,10 +40,12 @@ $(document).ready(() => {
                 if ($(this).val() != '[No Filter]'){
                     // Add id and value to url query string
                     urlParams.set(col_header, $(this).val());
+                    module.settings.activeFilters[col_header] = $(this).val();
                     search_value = "^" + $(this).val() + "( \\\([^\)]\\\))*$"
                 }
                 else{
                     // Remove id and value from url query string
+                    module.settings.activeFilters.delete(col_header)
                     urlParams.delete(col_header);
                 }
                 window.history.replaceState({}, '', `${location.pathname}?${urlParams}`);
@@ -110,7 +112,7 @@ $(document).ready(() => {
             else{
                 let new_th = $("<th>")
                 if(isFilterColumn(i, header_column_offset)){
-                    new_th.append(createDropdownFilter(i, module.settings.columns[i-header_column_offset-1]))
+                    new_th.append(createDropdownFilter(i, module.report_fields[i-header_column_offset]))
                 }
                 else{
                 }
@@ -204,7 +206,7 @@ $(document).ready(() => {
     }
 
     const downloadDataModal = () => {
-        dialog_content = ""
+        dialog_content = "<font style='font-size:14px'>This report is available for download in CSV format. It will include the data displayed in the report table, including any in-table filters you have applied.</font><br/><br/>"
         if (module.report_display_header == "BOTH"){
             dialog_content += "<font style='font-size:14px; margin-right:10px'>What do you want to include in the header?</font>"
             dialog_content += "<select id='report_display_header'>"
@@ -256,6 +258,28 @@ $(document).ready(() => {
             }
         }
         insertDownloadBtn()
+
+        //Add change event listeners to live filters to trigger redraw
+        document.getElementById('lf1').addEventListener('change',function(){waitForLoad()})
+        document.getElementById('lf2').addEventListener('change',function(){waitForLoad()})
+        document.getElementById('lf3').addEventListener('change',function(){waitForLoad()})
+
+        //Add click event listener to live filter reset button to trigger redraw
+        if(document.querySelector("#report_div select[id^='lf'] ~ a") != null){
+            document.querySelector("#report_div select[id^='lf'] ~ a").addEventListener('click',function(){waitForLoad()})
+        }
+
+        // Process Active Filters
+        for (const [key, value] of Object.entries(module.settings.activeFilters)) {
+            if(module.settings.columns.includes(key)){
+                // If select has an option with value of value, set that option to selected
+                //Check if select has an option with value of value
+                if ($("#filter_col_"+key).find("option[value='"+value+"']").length > 0) {
+                    $("#filter_col_"+key).val(value);
+                    $("#filter_col_"+key).change();
+                }
+            }
+        }
 
         return 
     }
