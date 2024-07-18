@@ -19,6 +19,33 @@ Any field type can be utilized for this feature, including free text. For instan
 
 ![Report View First Name Filtered](img/report_view_first_name_filtered.png)
 
+## Features
+
+### Sendable URLs
+
+The module supports sendable URLs, allowing for the sharing of filtered reports. When a filter is applied, the URL is updated to include the filter. This allows for the sharing of the filtered report.
+![Filter in URL](img/filter_in_url.png)
+
+### Downloadable CSV
+
+The module supports the downloading of the filtered report as a CSV. When a filter is applied, the CSV download will include the filtered data. If the report includes both labels and raw data for the header or data rows, options will be given to download the CSV with either the labels, raw data, or both.
+
+The download pop-up should also include any citation information that is displayed in canonical REDCap report downloads.
+
+![Download CSV](img/download_report.png)
+
+### Live Filter Compatibility
+
+The module is compatible with the Live Filter module. When a live filter is applied, the in-table filters will remain.
+
+### Multipage Compatibility
+
+The module works when a report is split into multiple pages. The filters will remain when navigating between pages or selecting "All.
+
+### Report Tweaks Compatibility
+
+This module works with the popular Report Tweaks module.
+
 ## Installing
 
 You can install the module from the REDCap EM repo or drop it directly in your modules folder (i.e. `redcap/modules/report_filters_v1.0.0`).
