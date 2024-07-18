@@ -45,7 +45,7 @@ $(document).ready(() => {
                 }
                 else{
                     // Remove id and value from url query string
-                    module.settings.activeFilters.delete(col_header)
+                    delete module.settings.activeFilters[col_header]
                     urlParams.delete(col_header);
                 }
                 window.history.replaceState({}, '', `${location.pathname}?${urlParams}`);
@@ -74,10 +74,12 @@ $(document).ready(() => {
     }
 
     const getColumnLabel = (columnNo) => {
-        
-        return $(rcDataTable.column(columnNo).header()).contents().filter(function(){ 
-            return this.nodeType == Node.TEXT_NODE; 
-        })[0].nodeValue 
+        if (module.report_display_header == "BOTH"){
+            return $(rcDataTable.column(columnNo).header()).contents().filter(function(){ 
+                return this.nodeType == Node.TEXT_NODE; 
+            })[0].nodeValue 
+        }
+        return $(rcDataTable.column(columnNo).header()).text()
     }
 
     const createFilterRow = () => {
@@ -94,34 +96,28 @@ $(document).ready(() => {
         let header_length = $(header).find("tr:first th").length;
         let filter_row = $("<tr id='filter_row'>")
         let header_column_offset = 0 
-        
+        let create_row = false;
+
         for(let i=0; i< header_length; i++){
             let col_header = getColumnLabel(i)
-            if('Event Name' == col_header){
-                if(module.settings['event_name']){
-                    filter_row.append("<th>")
-                }
+            if(['redcap_event_name','Event Name','Repeat Instrument','Repeat Instance','redcap_repeat_instrument','redcap_repeat_instance'].includes(col_header)){
                 header_column_offset++
-            }
-            else if(['Repeat Instrument','Repeat Instance'].includes(col_header)){
-                if(module.settings['repeat_fields']){
-                    header_column_offset++
-                    filter_row.append("<th>")
-                }
+                filter_row.append("<th>")
+                
             }
             else{
+                create_row = true
                 let new_th = $("<th>")
                 if(isFilterColumn(i, header_column_offset)){
                     new_th.append(createDropdownFilter(i, module.report_fields[i-header_column_offset]))
-                }
-                else{
                 }
                 filter_row.append(new_th)
             }
 
         }
-
-        header.append(filter_row)
+        if(create_row){
+            header.append(filter_row)
+        }
     }
 
     /*
@@ -260,9 +256,19 @@ $(document).ready(() => {
         insertDownloadBtn()
 
         //Add change event listeners to live filters to trigger redraw
-        document.getElementById('lf1').addEventListener('change',function(){waitForLoad()})
-        document.getElementById('lf2').addEventListener('change',function(){waitForLoad()})
-        document.getElementById('lf3').addEventListener('change',function(){waitForLoad()})
+        if(document.getElementById('lf1') != null){
+            document.getElementById('lf1').addEventListener('change',function(){waitForLoad()})
+        }
+        if(document.getElementById('lf2') != null){
+            document.getElementById('lf2').addEventListener('change',function(){waitForLoad()})
+        }
+        if(document.getElementById('lf3') != null){
+            document.getElementById('lf3').addEventListener('change',function(){waitForLoad()})
+        }
+
+        if(document.querySelector("select.report_page_select")){
+            document.querySelector("select.report_page_select").addEventListener('change',function(){waitForLoad()})
+        }
 
         //Add click event listener to live filter reset button to trigger redraw
         if(document.querySelector("#report_div select[id^='lf'] ~ a") != null){
@@ -280,6 +286,18 @@ $(document).ready(() => {
                 }
             }
         }
+
+        //Report Tweaks
+
+        rcDataTable.on('column-visibility', function(e, settings, column, state){
+            console.debug("Column Visibility Changed")
+            if(state)  {
+                $('#filter_row th:eq('+column+')').show();
+            }
+            else {
+                $('#filter_row th:eq('+column+')').hide();
+            }
+        });
 
         return 
     }
