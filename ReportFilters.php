@@ -2,10 +2,12 @@
 
 namespace JFortriede\ReportFilters;
 
+// require_once APP_PATH_DOCROOT . '/Config/init_project.php';
 use ExternalModules\AbstractExternalModule;
 use REDCap;
 use DataExport;
 use RCView;
+use REDCapConfigDTO;
 
 class ReportFilters extends AbstractExternalModule
 {
@@ -67,6 +69,13 @@ class ReportFilters extends AbstractExternalModule
 
         // // Escape 3 feilds that are html enabled 
         $new = json_decode($_POST['settings'], true);
+        // if (!empty($new['_wb'])) {
+        //     foreach ($new['_wb'] as $index => $data) {
+        //         foreach (['footer', 'modalBtn', 'modalText'] as $html) {
+        //             $new['_wb'][$index][$html] = REDCap::escapeHtml($data[$html]);
+        //         }
+        //     }
+        // }
 
         $json[$_POST['report']] = $new;
         $this->setProjectSetting('json', json_encode($json));
@@ -87,9 +96,9 @@ class ReportFilters extends AbstractExternalModule
         ## NOTICES FOR CITATIONS (GRANT AND/OR SHARED LIBRARY) AND DATE-SHIFT NOTICE
         $citationText = "";
         // Do not display grant statement unless $grant_cite has been set for this project.
-        if ($grant_cite != "") {
+        if ($GLOBALS['grant_cite'] != "") {
             $citationText .= RCView::li(['class'=>'mb-2'],
-                    "{$lang['data_export_tool_297']} <b>$grant_cite</b>{$lang['period']}"
+                    "{$lang['data_export_tool_297']} <b>{$GLOBALS['grant_cite']}</b>{$lang['period']}"
                     );
         }
 
@@ -149,7 +158,9 @@ class ReportFilters extends AbstractExternalModule
         $data['report_fields'] = $details['fields'];
         $data['report_title'] = $details['title'];
         $data['report_display_data'] = $details['report_display_data'];
-        $data['report_display_header'] = $details['report_display_header'];        
+        $data['report_display_header'] = $details['report_display_header'];
+        // $data['report'] = $details;
+        
         $data['citation'] = $this->getCitatationHTML();
 
         $data['tt']=[];
@@ -160,6 +171,9 @@ class ReportFilters extends AbstractExternalModule
             $data['tt'][$field]=$this->tt($field);
         }
 
+        //     "add_filter" => $this->tt('add_filter')
+        //     "add_filter_checkbox_title" => $this->('')
+        // ];
         // Pass down to JS
         $data = json_encode($data);
         echo "<script>Object.assign({$this->jsGlobal}, {$data});</script>";

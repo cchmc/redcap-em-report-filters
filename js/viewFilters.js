@@ -1,6 +1,7 @@
 $(document).ready(() => {
     const module = ExternalModules.JFortriede.ReportFilters;
-    
+    module.settings.activeFilters=[]
+
     if(module.debug_mode && module.debug_mode <= 20){   // Write if Debug_mode is Info or Debug
         console.log("Report Filters Module Loaded");
     }
@@ -32,7 +33,6 @@ $(document).ready(() => {
         }
         // Get the search data for the first column and add to the select list
 
-        
         var select = $('<select id="filter_col_'+col_header+'" style="width:100px"/>')
             .on( 'change', function () {
                 let search_value = ''
@@ -40,10 +40,12 @@ $(document).ready(() => {
                 if ($(this).val() != '[No Filter]'){
                     // Add id and value to url query string
                     urlParams.set(col_header, $(this).val());
+                    module.settings.activeFilters[col_header] = $(this).val();
                     search_value = "^" + $(this).val() + "( \\\([^\)]\\\))*$"
                 }
                 else{
                     // Remove id and value from url query string
+                    delete module.settings.activeFilters[col_header]
                     urlParams.delete(col_header);
                 }
                 window.history.replaceState({}, '', `${location.pathname}?${urlParams}`);
@@ -72,10 +74,12 @@ $(document).ready(() => {
     }
 
     const getColumnLabel = (columnNo) => {
-        
-        return $(rcDataTable.column(columnNo).header()).contents().filter(function(){ 
-            return this.nodeType == Node.TEXT_NODE; 
-        })[0].nodeValue 
+        if (module.report_display_header == "BOTH"){
+            return $(rcDataTable.column(columnNo).header()).contents().filter(function(){ 
+                return this.nodeType == Node.TEXT_NODE; 
+            })[0].nodeValue 
+        }
+        return $(rcDataTable.column(columnNo).header()).text()
     }
 
     const createFilterRow = () => {
@@ -92,34 +96,28 @@ $(document).ready(() => {
         let header_length = $(header).find("tr:first th").length;
         let filter_row = $("<tr id='filter_row'>")
         let header_column_offset = 0 
-        
+        let create_row = false;
+
         for(let i=0; i< header_length; i++){
             let col_header = getColumnLabel(i)
-            if('Event Name' == col_header){
-                if(module.settings['event_name']){
-                    filter_row.append("<th>")
-                }
+            if(['redcap_event_name','Event Name','Repeat Instrument','Repeat Instance','redcap_repeat_instrument','redcap_repeat_instance'].includes(col_header)){
                 header_column_offset++
-            }
-            else if(['Repeat Instrument','Repeat Instance'].includes(col_header)){
-                if(module.settings['repeat_fields']){
-                    header_column_offset++
-                    filter_row.append("<th>")
-                }
+                filter_row.append("<th>")
+                
             }
             else{
+                create_row = true
                 let new_th = $("<th>")
                 if(isFilterColumn(i, header_column_offset)){
-                    new_th.append(createDropdownFilter(i, module.settings.columns[i-header_column_offset-1]))
-                }
-                else{
+                    new_th.append(createDropdownFilter(i, module.report_fields[i-header_column_offset]))
                 }
                 filter_row.append(new_th)
             }
 
         }
-
-        header.append(filter_row)
+        if(create_row){
+            header.append(filter_row)
+        }
     }
 
     /*
@@ -204,7 +202,7 @@ $(document).ready(() => {
     }
 
     const downloadDataModal = () => {
-        dialog_content = ""
+        dialog_content = "<font style='font-size:14px'>This report is available for download in CSV format. It will include the data displayed in the report table, including any in-table filters you have applied.</font><br/><br/>"
         if (module.report_display_header == "BOTH"){
             dialog_content += "<font style='font-size:14px; margin-right:10px'>What do you want to include in the header?</font>"
             dialog_content += "<select id='report_display_header'>"
@@ -256,6 +254,50 @@ $(document).ready(() => {
             }
         }
         insertDownloadBtn()
+
+        //Add change event listeners to live filters to trigger redraw
+        if(document.getElementById('lf1') != null){
+            document.getElementById('lf1').addEventListener('change',function(){waitForLoad()})
+        }
+        if(document.getElementById('lf2') != null){
+            document.getElementById('lf2').addEventListener('change',function(){waitForLoad()})
+        }
+        if(document.getElementById('lf3') != null){
+            document.getElementById('lf3').addEventListener('change',function(){waitForLoad()})
+        }
+
+        if(document.querySelector("select.report_page_select")){
+            document.querySelector("select.report_page_select").addEventListener('change',function(){waitForLoad()})
+        }
+
+        //Add click event listener to live filter reset button to trigger redraw
+        if(document.querySelector("#report_div select[id^='lf'] ~ a") != null){
+            document.querySelector("#report_div select[id^='lf'] ~ a").addEventListener('click',function(){waitForLoad()})
+        }
+
+        // Process Active Filters
+        for (const [key, value] of Object.entries(module.settings.activeFilters)) {
+            if(module.settings.columns.includes(key)){
+                // If select has an option with value of value, set that option to selected
+                //Check if select has an option with value of value
+                if ($("#filter_col_"+key).find("option[value='"+value+"']").length > 0) {
+                    $("#filter_col_"+key).val(value);
+                    $("#filter_col_"+key).change();
+                }
+            }
+        }
+
+        //Report Tweaks
+
+        rcDataTable.on('column-visibility', function(e, settings, column, state){
+            console.debug("Column Visibility Changed")
+            if(state)  {
+                $('#filter_row th:eq('+column+')').show();
+            }
+            else {
+                $('#filter_row th:eq('+column+')').hide();
+            }
+        });
 
         return 
     }
