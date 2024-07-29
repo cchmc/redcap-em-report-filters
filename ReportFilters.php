@@ -2,7 +2,6 @@
 
 namespace JFortriede\ReportFilters;
 
-// require_once APP_PATH_DOCROOT . '/Config/init_project.php';
 use ExternalModules\AbstractExternalModule;
 use REDCap;
 use DataExport;
@@ -69,13 +68,6 @@ class ReportFilters extends AbstractExternalModule
 
         // // Escape 3 feilds that are html enabled 
         $new = json_decode($_POST['settings'], true);
-        // if (!empty($new['_wb'])) {
-        //     foreach ($new['_wb'] as $index => $data) {
-        //         foreach (['footer', 'modalBtn', 'modalText'] as $html) {
-        //             $new['_wb'][$index][$html] = REDCap::escapeHtml($data[$html]);
-        //         }
-        //     }
-        // }
 
         $json[$_POST['report']] = $new;
         $this->setProjectSetting('json', json_encode($json));
@@ -171,9 +163,6 @@ class ReportFilters extends AbstractExternalModule
             $data['tt'][$field]=$this->tt($field);
         }
 
-        //     "add_filter" => $this->tt('add_filter')
-        //     "add_filter_checkbox_title" => $this->('')
-        // ];
         // Pass down to JS
         $data = json_encode($data);
         echo "<script>Object.assign({$this->jsGlobal}, {$data});</script>";
