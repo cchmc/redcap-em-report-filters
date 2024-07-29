@@ -12,9 +12,6 @@
             "institution": "Cincinnati Children's Hospital Medical Center"
         }
     ],
-    "permissions": [
-        "redcap_every_page_top"
-    ],
     "framework-version": 13,
     "project-settings": [
         {
