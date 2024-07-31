@@ -235,9 +235,10 @@ $(document).ready(() => {
             return;
         }
 
-        if(length(module.settings.columns) > 0){
-            createFilterRow();
+        if(!('columns' in module.settings) || length(module.settings.columns) == 0){
+            return
         }
+        createFilterRow();
 
         // Adjust table columns for new filter row 
         rcDataTable.columns.adjust().draw()
