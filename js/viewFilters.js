@@ -73,13 +73,15 @@ $(document).ready(() => {
         return $("#report_table_wrapper table:first.dataTable thead")
     }
 
+
     const getColumnLabel = (columnNo) => {
+        let header = $("#report_table_wrapper table:first.dataTable thead").find("tr:first th")[columnNo]
         if (module.report_display_header == "BOTH"){
-            return $(rcDataTable.column(columnNo).header()).contents().filter(function(){ 
+            return $(header).contents().filter(function(){ 
                 return this.nodeType == Node.TEXT_NODE; 
             })[0].nodeValue 
         }
-        return $(rcDataTable.column(columnNo).header()).text()
+        return $(header).text()
     }
 
     const createFilterRow = () => {
@@ -92,28 +94,51 @@ $(document).ready(() => {
     and the enable/disable floating headers button appear uniform with the 
     new range search boxes at the top of report.
     */
+    
+    const getColumnIndexing = () => {
+        let columnIndexes = {}
+        if (module.report_display_header == "BOTH"){
+            rcDataTable.columns().header().each(function(header, index){
+                let header_text = $(header).contents().filter(function(){return this.nodeType == Node.TEXT_NODE;})[0].nodeValue
+                columnIndexes[header_text] = index
+            })
+        }
+        else{
+            rcDataTable.columns().header().each(function(header, index){
+                columnIndexes[$(header).text()] = index
+            })
+        }
+        return columnIndexes
+    }
+
     const copyHeader = (header) => {
+        let columnIndexes = getColumnIndexing()
         let header_length = $(header).find("tr:first th").length;
         let filter_row = $("<tr id='filter_row'>")
         let header_column_offset = 0 
         let create_row = false;
 
         for(let i=0; i< header_length; i++){
+            let new_th = $("<th>")
             let col_header = getColumnLabel(i)
+            
+            //
             if(['redcap_event_name','Event Name','Repeat Instrument','Repeat Instance','redcap_repeat_instrument','redcap_repeat_instance'].includes(col_header)){
                 header_column_offset++
-                filter_row.append("<th>")
-                
-            }
-            else{
-                create_row = true
-                let new_th = $("<th>")
-                if(isFilterColumn(i, header_column_offset)){
-                    new_th.append(createDropdownFilter(i, module.report_fields[i-header_column_offset]))
-                }
-                filter_row.append(new_th)
             }
 
+            // console.log(i, i-header_column_offset, col_header, columnIndexes[col_header])
+            if(isFilterColumn(i-header_column_offset,0)){
+                // console.log("\tfilter")
+                let select = createDropdownFilter(columnIndexes[col_header], module.report_fields[i])
+                if(select){
+                    create_row=true
+                    new_th.append(select)
+                }    
+            }
+
+            filter_row.append(new_th)
+            
         }
         if(create_row){
             header.append(filter_row)
@@ -174,7 +199,7 @@ $(document).ready(() => {
                 cell_value = $(value).text()
             }
 
-            return prefix + cell_value;
+            return prefix + cell_value.replace(/\u00A0/g, " ");
         });
 
         // put data in a file and download it
