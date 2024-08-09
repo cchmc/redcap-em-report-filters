@@ -96,7 +96,6 @@ $(document).ready(() => {
     */
     
     const getColumnIndexing = () => {
-        console.log("Get Column Indexing")
         let columnIndexes = {}
         if (module.report_display_header == "BOTH"){
             rcDataTable.columns().header().each(function(header, index){
@@ -200,7 +199,7 @@ $(document).ready(() => {
                 cell_value = $(value).text()
             }
 
-            return prefix + cell_value;
+            return prefix + cell_value.replace(/\u00A0/g, " ");
         });
 
         // put data in a file and download it
