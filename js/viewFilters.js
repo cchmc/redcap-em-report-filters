@@ -66,7 +66,10 @@ $(document).ready(() => {
             .sort()
             .unique()
             .each( function ( d ) {
-                d = d.replace(/ \([^)]+\)$/,'')
+                // Remove the count from the end of the string if we are displaying both label and raw data
+                if(module.report_display_data == "BOTH"){
+                    d = d.replace(/ \([^)]+\)$/,'')
+                }
                 select.append( $('<option value="'+d+'">'+d+'</option>') );
             } );
         return select
