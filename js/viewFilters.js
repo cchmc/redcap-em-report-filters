@@ -20,6 +20,10 @@ $(document).ready(() => {
         return false
     }
 
+    function escapeRegExp(string) {
+        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
+    }
+
     const createDropdownFilter = (colIdx, col_header) => {
         // If only 1 value, do not include a dropdown filter
         if(
@@ -41,7 +45,7 @@ $(document).ready(() => {
                     // Add id and value to url query string
                     urlParams.set(col_header, $(this).val());
                     module.settings.activeFilters[col_header] = $(this).val();
-                    search_value = "^" + $(this).val() + "( \\\([^\)]\\\))*$"
+                    search_value = "^" + escapeRegExp($(this).val()) + "( \\\([^\)]\\\))*$"
                 }
                 else{
                     // Remove id and value from url query string
