@@ -226,7 +226,7 @@ $(document).ready(() => {
 
         // $("<div id='report_filter_export'>").innerHTML(ExternalModules.JFortriede.ReportFilters.export_dialog)
 
-        simpleDialog(dialog_content+module.citation+download_button,'Download Report','ReportFiltersDownloadModal',650)
+        simpleDialog(dialog_content+module.citation+download_button,'Download Report','ReportFiltersDownloadModal',750)
         $("#rfDownloadBtn").on("click", downloadData);
     }   
 
