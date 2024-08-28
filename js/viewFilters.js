@@ -163,93 +163,71 @@ $(document).ready(() => {
             content: module['tt']["button_download"],
             trigger: "hover"
         });
-        $("#rfDownloadDataBtn").on("click", downloadDataModal);
+        $("#rfDownloadDataBtn").on("click", function(event){event.preventDefault(); downloadDataModal()});
     }
 
 
     const downloadData = () => {
-        // Find all visible headers and get the field name
-        let headers = []
+        let rows = []
+        rcDataTable.rows({filter: 'applied'}).every(function (rowIdx, data, node) {
+                    rows.push(rowIdx)
+                    // ... do something with data(), or this.node(), etc
+                } );
         
-        if ($('#report_display_header').val() == 'both'){
-            headers = $("#report_table tr:first-child th:visible").map((_, el) => $(el).contents()[0].data + " (" + $(el).contents()[1].innerText + ")").get();
-        }
-        // else if ($('input[name="header"]:checked').val() == 'label'){
-            // headers = $("#report_table tr:first-child th:visible").map((_, el) => $(el).contents()[0].data).get();
-        // }
-        else if ($('#report_display_header').val() == 'raw'){
-            headers = $("#report_table tr:first-child th:visible").map((_, el) => $(el).contents()[1].innerText).get();
-        }
-        else{
-            headers = $("#report_table tr:first-child th:visible").map((_, el) => $(el).contents()[0].data).get();
-        }
-        // For every cell organize it into our matrix/grid
-        let data = $("#report_table td:visible").map((index, value) => {
-            const prefix = index % headers.length == 0 ? '\n' : ',';
-            if ($('#report_display_data').val() == 'label'){
-                cell_value = $(value).contents()[0].data || $(value).contents()[0].text
-            }
-            else if ($(value).contents().length > 1 && $('#report_display_data').val() == 'raw'){
-                cell_value = $(value).contents()[1].innerText.replaceAll(/[()]/g,"")
-            }
-            else if ($(value).contents().length > 1 && $('#report_display_data').val() == 'both'){    
-                cell_value = ($(value).contents()[0].data || $(value).contents()[0].text) + " (" + $(value).contents()[1].innerText.replaceAll(/[()]/g,"") + ")"
-            }
-            else{
-                cell_value = $(value).text()
-            }
 
-            return prefix + cell_value.replace(/\u00A0/g, " ");
-        });
+        let url = app_path_webroot+"ExternalModules/?prefix=report_filters&page=export&pid="+pid
+        let urlParams = new URLSearchParams(window.location.search);
 
-        // put data in a file and download it
-        
-        // Create a CSV string
-        let csvContent = headers.join(',') + data.get().join('');
-        
-        // Create a Blob object with the CSV data
-        let blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        
-        // Create a temporary URL for the Blob
-        let url = URL.createObjectURL(blob);
-        
-        // Create a link element and set its attributes
-        let link = document.createElement('a');
-        link.href = url;
-        link.download = module.project_title + '-' + module.report_title + '.csv';
-        
-        // Simulate a click on the link to trigger the download
-        link.click();
-        
-        // Clean up the temporary URL
-        URL.revokeObjectURL(url);
+        for (const [key, value] of urlParams){
+            if( key.startsWith("lf")){
+                url += "&"+key+"="+value
+            }
+        }
 
+        $.post(url,
+          {
+            report_id: ExternalModules.JFortriede.ReportFilters.report_id,
+            rows: rows,
+            rawOrLabel: $('#report_display_data').val(),
+          },
+          function(data, status){
+            // Create a Blob object with the CSV data
+            let blob = new Blob([data], { type: 'text/csv;charset=utf-8;' });
+            
+            // Create a temporary URL for the Blob
+            let url = URL.createObjectURL(blob);
+            
+            // Create a link element and set its attributes
+            let link = document.createElement('a');
+            link.href = url;
+            link.download = module.project_title + '-' + module.report_title + '.csv';
+            
+            // Simulate a click on the link to trigger the download
+            link.click();
+            
+            // Clean up the temporary URL
+            URL.revokeObjectURL(url);
+          });
+        
     }
 
     const downloadDataModal = () => {
-        dialog_content = "<font style='font-size:14px'>This report is available for download in CSV format. It will include the data displayed in the report table, including any in-table filters you have applied.</font><br/><br/>"
-        if (module.report_display_header == "BOTH"){
-            dialog_content += "<font style='font-size:14px; margin-right:10px'>What do you want to include in the header?</font>"
-            dialog_content += "<select id='report_display_header'>"
-            dialog_content += "<option value='both' selected>Label and Raw Data</option>"
-            dialog_content += "<option value='label'>Label Only</option>"
-            dialog_content += "<option value='raw'>Raw Data</option>"
-            dialog_content += "</select></br></br>"
+        dialog_content = "<font style='font-size:14px'>This report is available for download in CSV format. The downloaded data will follow REDCap User permissions for de-identification/export rights, but will also filter the results to only the rows that are shown in the table.<br/><br/>"
+        if($("select.report_page_select").length>0){
+            dialog_content += "<b>Note:</b> This report has multiple pages of data. Only the data on the current page will be downloaded. You will need to click to show all records for the filtering to work.<br/><br/>"
         }
-        if (module.report_display_data == "BOTH"){
-            dialog_content += "<font style='font-size:14px; margin-right:24px'>What do you want to include in the data? </font>"
-            dialog_content += "<select id='report_display_data'>"
-            dialog_content += "<option value='both' selected>Label and Raw Data</option>"
-            dialog_content += "<option value='label'>Label Only</option>"
-            dialog_content += "<option value='raw'>Raw Data</option>"
-            dialog_content += "</select></br>"
-        }
+        dialog_content += "</font>"
+        dialog_content += "<font style='font-size:14px; margin-right:24px'>Export as: </font>"
+        dialog_content += "<select id='report_display_data'>"
+        dialog_content += "<option value='label'>Label</option>"
+        dialog_content += "<option value='raw'>Raw Data</option>"
+        dialog_content += "</select></br>"
         let download_button = '<a href="#" id="rfDownloadBtn" class="btn btn-secondary btn-sm mb-1" role="button" style="float: right; margin-top: 10px"><img src="'+module.APP_PATH_IMAGES+'download_csvdata.gif"></a>';
 
-        simpleDialog(dialog_content+module.citation+download_button,'Download Report',null,650)
-        $("#rfDownloadBtn").on("click", downloadData);
+        // $("<div id='report_filter_export'>").innerHTML(ExternalModules.JFortriede.ReportFilters.export_dialog)
 
-        return
+        simpleDialog(dialog_content+module.citation+download_button,'Download Report','ReportFiltersDownloadModal',750)
+        $("#rfDownloadBtn").on("click", downloadData);
     }   
 
     const waitForLoad = () => {
