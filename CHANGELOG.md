@@ -1,3 +1,11 @@
+# 1.0.6 (2024-09-04)
+
+### Bug Fixes
+
+- Escaping text to avoid REDCap Security Scan errors
+- Refactor Citation HTML to be AJAX loaded
+- Fix issue with report_id not being submitted to the export script
+
 # 1.0.5 (2024-09-04)
 
 ### Features

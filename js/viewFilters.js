@@ -168,7 +168,8 @@ $(document).ready(() => {
 
 
     const downloadData = () => {
-        let rows = []
+        let rows = [];
+        // TODO if #filter_row select value is not [No Filter] then add to rows
         rcDataTable.rows({filter: 'applied'}).every(function (rowIdx, data, node) {
                     rows.push(rowIdx)
                     // ... do something with data(), or this.node(), etc
@@ -186,7 +187,7 @@ $(document).ready(() => {
 
         $.post(url,
           {
-            report_id: ExternalModules.JFortriede.ReportFilters.report_id,
+            report_id: urlParams.get('report_id'),
             rows: rows,
             rawOrLabel: $('#report_display_data').val(),
           },
@@ -225,8 +226,18 @@ $(document).ready(() => {
         let download_button = '<a href="#" id="rfDownloadBtn" class="btn btn-secondary btn-sm mb-1" role="button" style="float: right; margin-top: 10px"><img src="'+module.APP_PATH_IMAGES+'download_csvdata.gif"></a>';
 
         // $("<div id='report_filter_export'>").innerHTML(ExternalModules.JFortriede.ReportFilters.export_dialog)
+        
+        citationHTML = ''
+        $.ajax({ type: "GET",
+            url : app_path_webroot+"ExternalModules/?prefix=report_filters&page=citation&pid="+pid,
+            async: false,
+            success : function(data){
+                citationHTML = data
+            }
+        })
 
-        simpleDialog(dialog_content+module.citation+download_button,'Download Report','ReportFiltersDownloadModal',750)
+
+        simpleDialog(dialog_content+citationHTML+download_button,'Download Report','ReportFiltersDownloadModal',750)
         $("#rfDownloadBtn").on("click", downloadData);
     }   
 
