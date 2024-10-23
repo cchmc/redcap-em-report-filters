@@ -268,7 +268,9 @@ $(document).ready(() => {
                 }
             }
         }
-        insertDownloadBtn()
+        if(module.data_export_tool != 0){
+            insertDownloadBtn()
+        }
 
         //Add change event listeners to live filters to trigger redraw
         if(document.getElementById('lf1') != null){
