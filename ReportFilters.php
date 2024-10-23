@@ -86,6 +86,7 @@ class ReportFilters extends AbstractExternalModule
     
     private function loadSettings($report = Null)
     {
+        global $user_rights;
         // Setup Redcap JS object
         $this->initializeJavascriptModuleObject();
         $this->tt_transferToJavascriptModuleObject();
@@ -109,6 +110,7 @@ class ReportFilters extends AbstractExternalModule
                 "settings" => $json,
                 "debug_mode" => $this->getDebugMode(),
                 "project_title" => REDCAP::getProjectTitle(),
+                'data_export_tool' => $user_rights['data_export_tool'],
                 "forms_from_library" => $this->escape($project->formsFromLibrary()),
                 "APP_PATH_IMAGES" => APP_PATH_IMAGES
                 // "eventMap" => $this->makeEventMap()
