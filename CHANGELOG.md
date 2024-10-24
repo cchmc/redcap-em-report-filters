@@ -1,3 +1,11 @@
+# 1.0.7 (2024-10-23)
+
+### Bug Fixes
+
+- Fix issue with using Report Tweaks external module causing mismatch of columns
+- Fix issue with searching where values have numbers in parenthesis at the end
+- Fix issue with exporting. The module not will not provide a download button if the user does not have export rights in the project. Additionally, the export follows the same logic as the normal REDCap export in terms of user rights. If a user does not have export rights to a field, that field will not be included in the export.
+
 # 1.0.6 (2024-09-04)
 
 ### Bug Fixes
