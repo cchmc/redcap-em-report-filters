@@ -2,6 +2,9 @@ $(document).ready(() => {
     const module = ExternalModules.JFortriede.ReportFilters;
     module.settings.activeFilters=[]
 
+    // This stores the field codings for each field, which allows a lookup of the label to the coded value for filtering
+    var field_codings = {}
+
     if(module.debug_mode && module.debug_mode <= 20){   // Write if Debug_mode is Info or Debug
         console.log("Report Filters Module Loaded");
     }
@@ -20,6 +23,8 @@ $(document).ready(() => {
         return false
     }
 
+    const escapeRegExp = str => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    
     const createDropdownFilter = (colIdx, col_header) => {
         // If only 1 value, do not include a dropdown filter
         if(
@@ -33,6 +38,8 @@ $(document).ready(() => {
         }
         // Get the search data for the first column and add to the select list
 
+        var col_unique_values = new Set()
+        var options = []
         var select = $('<select id="filter_col_'+col_header+'" style="width:100px"/>')
             .on( 'change', function () {
                 let search_value = ''
@@ -41,7 +48,8 @@ $(document).ready(() => {
                     // Add id and value to url query string
                     urlParams.set(col_header, $(this).val());
                     module.settings.activeFilters[col_header] = $(this).val();
-                    search_value = "^" + $(this).val() + "( \\\([^\)]\\\))*$"
+                    search_value_coded = field_codings[col_header]['label'][$(this).val()] || $(this).val();
+                    search_value = "^" + escapeRegExp(search_value_coded) + "$"
                 }
                 else{
                     // Remove id and value from url query string
@@ -49,22 +57,44 @@ $(document).ready(() => {
                     urlParams.delete(col_header);
                 }
                 window.history.replaceState({}, '', `${location.pathname}?${urlParams}`);
+
                 rcDataTable
                     .column( colIdx )
-                    .search(search_value, true, false, true)
+                    .search(search_value, {exact: false, regex: true, smart: false})
                     .draw();
             } );
         select.append( $('<option value="[No Filter]">[No Filter]</option>') );
         
+        field_codings[col_header] = {'value':{}, 'label':{}}
+
         rcDataTable   // Get the search data for the first column and add to the select list
             .column( colIdx )
-            .cache( 'search' )
-            .sort()
-            .unique()
-            .each( function ( d ) {
-                d = d.replace(/ \([^)]+\)$/,'')
-                select.append( $('<option value="'+d+'">'+d+'</option>') );
+            .data()
+            .each(function (d){
+                var match = /\s*<span class=\"ch\">(\(\d+\))<\/span>/.exec(d);
+                d = d.replace(/\s*<span class=\"ch\">\(\d+\)<\/span>/,'');
+                value = d
+
+                if(match != null && match.length > 0){
+                    value = `${d} ${match[1]}`;
+                }
+                if (!(col_unique_values.has(d))){
+                    col_unique_values.add(d);
+                    options.push({'label':d, 'value':value});
+                    
+                    field_codings[col_header]['value'][value] = d;
+                    field_codings[col_header]['label'][d] = value;
+                }
+
             } );
+        
+        options.sort((a,b) => a['label'].localeCompare(b['label']))
+
+        options.forEach(function(d){
+            // select.append( $('<option value="'+d['value']+'">'+d['label']+'</option>') );
+            select.append( $('<option value="'+d['label']+'">'+d['label']+'</option>') );
+        })
+
         return select
 
     }
@@ -127,10 +157,9 @@ $(document).ready(() => {
                 header_column_offset++
             }
 
-            // console.log(i, i-header_column_offset, col_header, columnIndexes[col_header])
             if(isFilterColumn(i-header_column_offset,0)){
                 // console.log("\tfilter")
-                let select = createDropdownFilter(columnIndexes[col_header], module.report_fields[i])
+                let select = createDropdownFilter(columnIndexes[col_header], module.report_fields[i-header_column_offset])
                 if(select){
                     create_row=true
                     new_th.append(select)
@@ -268,7 +297,9 @@ $(document).ready(() => {
                 }
             }
         }
-        insertDownloadBtn()
+        if(module.data_export_tool != 0){
+            insertDownloadBtn()
+        }
 
         //Add change event listeners to live filters to trigger redraw
         if(document.getElementById('lf1') != null){
