@@ -1,3 +1,9 @@
+# 1.0.8 (2024-11-14)
+
+### Bug Fixes
+
+- Fix where emails and links were not being properly formatted in the filters. [Community Post](https://redcap.vumc.org/community/post.php?id=240135&comment=243905)
+
 # 1.0.7 (2024-10-23)
 
 ### Bug Fixes
