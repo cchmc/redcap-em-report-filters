@@ -73,6 +73,12 @@ $(document).ready(() => {
             .each(function (d){
                 var match = /\s*<span class=\"ch\">(\(\d+\))<\/span>/.exec(d);
                 d = d.replace(/\s*<span class=\"ch\">\(\d+\)<\/span>/,'');
+                link_match = /^<a href=.+class="rc-url-to-link".+>(.+)<\/a>$/.exec(d);
+
+                if(link_match){
+                    d = link_match[1]
+                }
+                
                 value = d
 
                 if(match != null && match.length > 0){
