@@ -1,3 +1,16 @@
+# 1.0.9 (2025-09-26)
+
+### Bug Fixes
+
+- Fixed CSRF issue with downloading the report.
+- Other fixes to ensure proper dropdown functionality in the filters.
+
+### Features
+
+- Added a new project setting to allow/disallow downloading the report from the report page. This is separate from the existing setting that allows/disallows downloading the report from public survey links.
+
+- Added a new project setting to allow/disallow downloading the report from public survey links.
+
 # 1.0.8 (2024-11-14)
 
 ### Bug Fixes

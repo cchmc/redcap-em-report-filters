@@ -1,7 +1,7 @@
 $(document).ready(() => {
     const module = ExternalModules.JFortriede.ReportFilters;
     module.settings.activeFilters=[]
-
+    module.event_column_displayed=false
     // This stores the field codings for each field, which allows a lookup of the label to the coded value for filtering
     var field_codings = {}
 
@@ -71,8 +71,8 @@ $(document).ready(() => {
             .column( colIdx )
             .data()
             .each(function (d){
-                var match = /\s*<span class=\"ch\">(\(\d+\))<\/span>/.exec(d);
-                d = d.replace(/\s*<span class=\"ch\">\(\d+\)<\/span>/,'');
+                var match = /\s*<span class=\"ch\">(\(.+?\))<\/span>/.exec(d);
+                d = d.replace(/\s*\n?<span class=\"ch\">\(.+?\)<\/span>/,'');
                 link_match = /^<a href=.+class="rc-url-to-link".+>(.+)<\/a>$/.exec(d);
 
                 if(link_match){
@@ -148,14 +148,14 @@ $(document).ready(() => {
     }
 
     const copyHeader = (header) => {
-        let columnIndexes = getColumnIndexing()
         let header_length = $(header).find("tr:first th").length;
         let filter_row = $("<tr id='filter_row'>")
         let header_column_offset = 0 
         let create_row = false;
+        let header_th = $(header).find("tr:first th")
 
         for(let i=0; i< header_length; i++){
-            let new_th = $("<th>")
+            let header_cell = header_th[i]
             let col_header = getColumnLabel(i)
             
             //
@@ -163,17 +163,20 @@ $(document).ready(() => {
                 header_column_offset++
             }
 
-            if(isFilterColumn(i-header_column_offset,0)){
-                // console.log("\tfilter")
-                let select = createDropdownFilter(columnIndexes[col_header], module.report_fields[i-header_column_offset])
-                if(select){
-                    create_row=true
-                    new_th.append(select)
-                }    
-            }
+            let header_colspan = $(header_cell).attr('colspan') || 1
+            for (let index = 0; index < header_colspan; index++) {
+                let new_th = $("<th>")
 
-            filter_row.append(new_th)
-            
+                if(isFilterColumn(i-header_column_offset,0)){
+                    let select = createDropdownFilter(i+index, module.report_fields[i-header_column_offset]+"_"+index)
+                    if(select){
+                        create_row=true
+                        new_th.append(select)
+                    }
+                }
+
+                filter_row.append(new_th)
+            }
         }
         if(create_row){
             header.append(filter_row)
@@ -204,32 +207,32 @@ $(document).ready(() => {
 
     const downloadData = () => {
         let rows = [];
+
+        let event_name_displayed = false
+        getReportTableHeaderRow().find("tr:first th").each(function( index ) {
+            if(['redcap_event_name','Event Name'].includes(getColumnLabel(index))){
+                event_name_displayed = true
+            }
+            col_label = getColumnLabel(index)
+
+        })
+
         // TODO if #filter_row select value is not [No Filter] then add to rows
         rcDataTable.rows({filter: 'applied'}).every(function (rowIdx, data, node) {
                     rows.push(rowIdx)
-                    // ... do something with data(), or this.node(), etc
                 } );
-        
 
-        let url = app_path_webroot+"ExternalModules/?prefix=report_filters&page=export&pid="+pid
-        let urlParams = new URLSearchParams(window.location.search);
-
-        for (const [key, value] of urlParams){
-            if( key.startsWith("lf")){
-                url += "&"+key+"="+value
-            }
-        }
-
-        $.post(url,
-          {
-            report_id: urlParams.get('report_id'),
+        payload = {
+            report_id: module.report_details.report_id,
             rows: rows,
             rawOrLabel: $('#report_display_data').val(),
-          },
-          function(data, status){
-            // Create a Blob object with the CSV data
-            let blob = new Blob([data], { type: 'text/csv;charset=utf-8;' });
-            
+            event_name_displayed: event_name_displayed,
+            url: app_path_webroot+"ExternalModules/?prefix=report_filters&page=export&pid="+pid
+          }
+
+        module.ajax('exportReport', payload).then(function(response) {
+
+            let blob = new Blob([response], { type: 'text/csv;charset=utf-8;' });
             // Create a temporary URL for the Blob
             let url = URL.createObjectURL(blob);
             
@@ -243,7 +246,16 @@ $(document).ready(() => {
             
             // Clean up the temporary URL
             URL.revokeObjectURL(url);
-          });
+
+            // Process response
+         }).catch(function(err) {
+            console.log(err)
+            // Handle error
+
+         });
+
+         return
+
         
     }
 
@@ -262,18 +274,22 @@ $(document).ready(() => {
 
         // $("<div id='report_filter_export'>").innerHTML(ExternalModules.JFortriede.ReportFilters.export_dialog)
         
+
+
         citationHTML = ''
-        $.ajax({ type: "GET",
-            url : app_path_webroot+"ExternalModules/?prefix=report_filters&page=citation&pid="+pid,
-            async: false,
-            success : function(data){
-                citationHTML = data
-            }
-        })
+
+        module.ajax('citation').then(function(response) {
+            simpleDialog(dialog_content+response+download_button,'Download Report','ReportFiltersDownloadModal',750)
+            $("#rfDownloadBtn").on("click", downloadData);
+
+            // Process response
+         }).catch(function(err) {
+            console.log(err)
+            // Handle error
+
+         });
 
 
-        simpleDialog(dialog_content+citationHTML+download_button,'Download Report','ReportFiltersDownloadModal',750)
-        $("#rfDownloadBtn").on("click", downloadData);
     }   
 
     const waitForLoad = () => {
@@ -303,7 +319,12 @@ $(document).ready(() => {
                 }
             }
         }
-        if(module.data_export_tool != 0){
+        // IF data export tool is enable. 
+        if(module.data_export_tool != 0 && (
+            (module.allow_public_survey_download == 1 && is_survey()) || 
+            (module.allow_download == 1 && !is_survey())
+            )
+        ) {
             insertDownloadBtn()
         }
 
