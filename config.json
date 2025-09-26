@@ -12,7 +12,7 @@
             "institution": "Cincinnati Children's Hospital Medical Center"
         }
     ],
-    "framework-version": 13,
+    "framework-version": 16,
     "project-settings": [
         {
             "key": "info",
@@ -50,7 +50,7 @@
         }
     ],
     "compatibility": {
-        "redcap-version-min": "13.7.2"
+        "redcap-version-min": "14.6.4"
     },
 
     "auth-ajax-actions": [ "citation", "exportReport" ],
