@@ -130,6 +130,7 @@ class ReportFilters extends AbstractExternalModule
                 "settings" => $json,
                 "debug_mode" => $this->getDebugMode(),
                 "allow_public_survey_download" => $this->allowPublicSurveyDownload(),
+                "allow_download" => $this->getProjectSetting( 'allow-download' ),
                 "project_title" => REDCAP::getProjectTitle(),
                 'data_export_tool' => $user_rights['data_export_tool'],
                 "forms_from_library" => $this->escape($project->formsFromLibrary()),

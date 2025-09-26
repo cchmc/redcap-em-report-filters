@@ -320,7 +320,11 @@ $(document).ready(() => {
             }
         }
         // IF data export tool is enable. 
-        if(module.data_export_tool != 0 && (module.allow_public_survey_download == 1 || !is_survey())) {
+        if(module.data_export_tool != 0 && (
+            (module.allow_public_survey_download == 1 && is_survey()) || 
+            (module.allow_download == 1 && !is_survey())
+            )
+        ) {
             insertDownloadBtn()
         }
 

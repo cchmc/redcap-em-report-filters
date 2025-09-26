@@ -38,6 +38,15 @@
                 { "value": 0, "name": "No" },
                 { "value": 1, "name": "Yes" }
             ]
+        },
+        {
+            "key": "allow-download",
+            "name": "Allow download on report page",
+            "type": "radio",
+            "choices": [
+                { "value": 0, "name": "No" },
+                { "value": 1, "name": "Yes" }
+            ]
         }
     ],
     "compatibility": {
