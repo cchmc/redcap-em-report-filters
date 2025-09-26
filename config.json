@@ -29,9 +29,31 @@
                 { "value" : 10, "name" : "Debug" },
                 { "value" : 20, "name" : "Info" }
 			]
-		}
+		},
+        {
+            "key": "allow-public-survey-download",
+            "name": "Allow public survey users to download filtered reports",
+            "type": "radio",
+            "choices": [
+                { "value": 0, "name": "No" },
+                { "value": 1, "name": "Yes" }
+            ]
+        }
     ],
     "compatibility": {
         "redcap-version-min": "13.7.2"
-    }
+    },
+
+    "auth-ajax-actions": [ "citation", "exportReport" ],
+    "no-auth-ajax-actions":[
+        "citation","exportReport"
+    ],
+
+	"no-auth-pages": [
+		"citation","exportReport"
+    ],
+
+	"no-csrf-pages": [
+        "exportReport"
+	]
 }
