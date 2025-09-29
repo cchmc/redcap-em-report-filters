@@ -322,6 +322,10 @@ $(document).ready(() => {
                     $("#filter_col_"+key).val(value);
                     $("#filter_col_"+key).change();
                 }
+                else if ($("#filter_col_"+key+"_0").find("option[value='"+value+"']").length > 0) {
+                    $("#filter_col_"+key+"_0").val(value);
+                    $("#filter_col_"+key+"_0").change();
+                }
             }
         }
         // IF data export tool is enable. 
