@@ -314,7 +314,8 @@ $(document).ready(() => {
         // Get all url parameters
         let urlParams = new URLSearchParams(window.location.search);
         for (const [key, value] of urlParams) {
-            if(module.settings.columns.includes(key)){
+            column_key = key.replace(/_\d+$/,'')  // Remove _0 from end of key if present
+            if(module.settings.columns.includes(column_key)){
                 // If select has an option with value of value, set that option to selected
                 //Check if select has an option with value of value
                 if ($("#filter_col_"+key).find("option[value='"+value+"']").length > 0) {
