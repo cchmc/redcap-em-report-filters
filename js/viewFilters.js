@@ -260,36 +260,40 @@ $(document).ready(() => {
     }
 
     const downloadDataModal = () => {
-        dialog_content = "<font style='font-size:14px'>This report is available for download in CSV format. The downloaded data will follow REDCap User permissions for de-identification/export rights, but will also filter the results to only the rows that are shown in the table.<br/><br/>"
-        if($("select.report_page_select").length>0){
-            dialog_content += "<b>Note:</b> This report has multiple pages of data. Only the data on the current page will be downloaded. You will need to click to show all records for the filtering to work.<br/><br/>"
+        // If report_page_select  is present and 'ALL' is not selected, warn user that only current page will be downloaded
+        let report_page_select = $("select.report_page_select");
+        let selected_page = report_page_select.val();
+        if(report_page_select.length>0 && selected_page != 'ALL'){
+            simpleDialog("<font style='font-size:14px'><b>Note:</b> This report has multiple pages of data. Only the data on the current page will be downloaded. You will need to click to show all records for the filtering to work.</font>",'Download Report Warning','ReportFiltersDownloadWarningModal',500)
         }
-        dialog_content += "</font>"
-        dialog_content += "<font style='font-size:14px; margin-right:24px'>Export as: </font>"
-        dialog_content += "<select id='report_display_data'>"
-        dialog_content += "<option value='label'>Label</option>"
-        dialog_content += "<option value='raw'>Raw Data</option>"
-        dialog_content += "</select></br>"
-        let download_button = '<a href="#" id="rfDownloadBtn" class="btn btn-secondary btn-sm mb-1" role="button" style="float: right; margin-top: 10px"><img src="'+module.APP_PATH_IMAGES+'download_csvdata.gif"></a>';
-
-        // $("<div id='report_filter_export'>").innerHTML(ExternalModules.JFortriede.ReportFilters.export_dialog)
-        
-
-
-        citationHTML = ''
-
-        module.ajax('citation').then(function(response) {
-            simpleDialog(dialog_content+response+download_button,'Download Report','ReportFiltersDownloadModal',750)
-            $("#rfDownloadBtn").on("click", downloadData);
-
-            // Process response
-         }).catch(function(err) {
-            console.log(err)
-            // Handle error
-
-         });
+        else{
+            
+            dialog_content = "<font style='font-size:14px'>This report is available for download in CSV format. The downloaded data will follow REDCap User permissions for de-identification/export rights, but will also filter the results to only the rows that are shown in the table.<br/><br/>"
+            if($("select.report_page_select").length>0){
+                dialog_content += "<b>Note:</b> This report has multiple pages of data. Only the data on the current page will be downloaded. You will need to click to show all records for the filtering to work.<br/><br/>"
+            }
+            dialog_content += "</font>"
+            dialog_content += "<font style='font-size:14px; margin-right:24px'>Export as: </font>"
+            dialog_content += "<select id='report_display_data'>"
+            dialog_content += "<option value='label'>Label</option>"
+            dialog_content += "<option value='raw'>Raw Data</option>"
+            dialog_content += "</select></br>"
+            let download_button = '<a href="#" id="rfDownloadBtn" class="btn btn-secondary btn-sm mb-1" role="button" style="float: right; margin-top: 10px"><img src="'+module.APP_PATH_IMAGES+'download_csvdata.gif"></a>';
 
 
+
+            module.ajax('citation').then(function(response) {
+                simpleDialog(dialog_content+response+download_button,'Download Report','ReportFiltersDownloadModal',750)
+                $("#rfDownloadBtn").on("click", downloadData);
+
+                // Process response
+            }).catch(function(err) {
+                console.log(err)
+                // Handle error
+
+            });
+
+        }
     }   
 
     const waitForLoad = () => {
@@ -310,12 +314,17 @@ $(document).ready(() => {
         // Get all url parameters
         let urlParams = new URLSearchParams(window.location.search);
         for (const [key, value] of urlParams) {
-            if(module.settings.columns.includes(key)){
+            column_key = key.replace(/_\d+$/,'')  // Remove _0 from end of key if present
+            if(module.settings.columns.includes(column_key)){
                 // If select has an option with value of value, set that option to selected
                 //Check if select has an option with value of value
                 if ($("#filter_col_"+key).find("option[value='"+value+"']").length > 0) {
                     $("#filter_col_"+key).val(value);
                     $("#filter_col_"+key).change();
+                }
+                else if ($("#filter_col_"+key+"_0").find("option[value='"+value+"']").length > 0) {
+                    $("#filter_col_"+key+"_0").val(value);
+                    $("#filter_col_"+key+"_0").change();
                 }
             }
         }

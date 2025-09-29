@@ -304,7 +304,7 @@ class ReportFilters extends AbstractExternalModule
 
         $report = DataExport::getReports($report_id);
 
-        $format = 'csvraw';
+        $format = ($rawOrLabel == 'raw') ? 'csvraw' : 'csvlabels';
 
         $content = DataExport::doReport($report_id, 'export', $format, false, false,
                                         false, false, null, $hashRecordID, null, null, null, false, false, array(), array(), false, $exportCheckboxLabel,
