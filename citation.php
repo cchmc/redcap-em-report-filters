@@ -9,6 +9,9 @@ use RCView;
 // Display the project header
 // require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
 
+define("NOAUTH", true);
+
+
 global $Proj;
 
 global $lang;

@@ -1,3 +1,23 @@
+# 1.0.9 (2025-09-26)
+
+### Non-Breaking "Breaking" Changes
+
+- Download button: There is now project-level settings that enables/disables the download button on the report page and public reports. This is set to disabled by default for existing installations to avoid unexpected changes in functionality. To get this functionality back, enable the setting in the project settings page.
+
+### Bug Fixes
+
+- Fixed CSRF issue with downloading the report.
+- Other fixes to ensure proper dropdown functionality in the filters.
+- Fixed URL parameter filtering to work with column indexes or the named fields (e.g. first_name_0, last_name_0). This also allows for backward compatibility with URLs that were created before this change.
+
+### Features
+
+- Added a new project setting to allow/disallow downloading the report from the report page. This is separate from the existing setting that allows/disallows downloading the report from public survey links.
+
+- Added a new project setting to allow/disallow downloading the report from public survey links.
+
+- If the report is paginated, on download attempt, a warning will be displayed indicating that 'All' records must be selected to allow download. This is necessary based on how the download works.
+
 # 1.0.8 (2024-11-14)
 
 ### Bug Fixes
