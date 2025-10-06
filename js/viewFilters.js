@@ -231,6 +231,12 @@ $(document).ready(() => {
           }
 
         module.ajax('exportReport', payload).then(function(response) {
+            // If response starts with ERROR: and ends with :ERROR, show error dialog as there is a permission or other error
+            if (response.startsWith("ERROR:") && response.endsWith(":ERROR")){
+                response = response.replace("ERROR:","").replace(":ERROR","")
+                simpleDialog("<font style='font-size:14px;color:red'>"+response+"</font>",'Download Report Error','ReportFiltersDownloadErrorModal',500)
+                return
+            }
 
             let blob = new Blob([response], { type: 'text/csv;charset=utf-8;' });
             // Create a temporary URL for the Blob
