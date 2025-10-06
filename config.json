@@ -59,7 +59,7 @@
     ],
 
 	"no-auth-pages": [
-		"citation","exportReport"
+		"citation"
     ],
 
 	"no-csrf-pages": [
