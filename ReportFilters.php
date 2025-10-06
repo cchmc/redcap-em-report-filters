@@ -289,7 +289,7 @@ class ReportFilters extends AbstractExternalModule
 
     private function exportReport($payload){
         $project_id = ExternalModules::getProjectId();
-        global $Proj;
+        global $Proj, $user_rights; 
 
         $event_name_displayed = $payload['event_name_displayed'];
         $report_id = $payload['report_id'];
@@ -299,6 +299,37 @@ class ReportFilters extends AbstractExternalModule
         $hashRecordID = false;
 
         $exportCheckboxLabel=true;
+
+
+        # Check that report id is on project to 
+        if( DataExport::validateReportId($project_id, $report_id) !== true){
+            return "ERROR:Report ID {$report_id} is not valid.:ERROR";
+        }
+
+        #Get report id from public survey hash
+        if ($this->isSurveyPage() && $_GET['__report']) {
+            list ($pid, $report_id, $report_title) = DataExport::getReportInfoFromPublicHash($_GET['__report']);
+            $hashRecordID = (isset($_GET['__record']) && is_numeric($_GET['__record'])) ? $_GET['__record'] : false;
+        }
+        # Check if the user can view the report
+        else{
+            $reportsMenuList = DataExport::getReportNames(null, !UserRights::isSuperUserNotImpersonator());
+            # reportsMenuList is an array of objects with key report_id. Check if report_id is in the array
+            # Note, in REDCap proper, using hacking the URL allows a user to view a report they do not have permission to view.
+            #   This is a security fix to prevent the use or this URL hack in this EM.
+            $report_ids = array_column($reportsMenuList, 'report_id');
+            if (!in_array($report_id, $report_ids)) {
+                return "ERROR:You do not have permission to view this report.:ERROR";
+            }
+        }
+
+        # Check if EM settings allow download based on report or survey page
+        if (!$this->allowPublicSurveyDownload() && $this->isSurveyPage()){
+            return "ERROR:Downloading survey reports is not allowed.:ERROR";
+        }
+        if (!($this->getProjectSetting( 'allow-download' ) || $this->allowPublicSurveyDownload()) && !$this->isSurveyPage()){
+            return "ERROR:Downloading reports is not allowed.:ERROR";
+        }
 
         list ($liveFilterLogic, $liveFilterGroupId, $liveFilterEventId) = DataExport::buildReportDynamicFilterLogic($report_id);
 

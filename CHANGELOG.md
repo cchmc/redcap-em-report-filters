@@ -9,6 +9,7 @@
 - Fixed CSRF issue with downloading the report.
 - Other fixes to ensure proper dropdown functionality in the filters.
 - Fixed URL parameter filtering to work with column indexes or the named fields (e.g. first_name_0, last_name_0). This also allows for backward compatibility with URLs that were created before this change.
+- Implemented security to avoid URL manipulation to access reports that the user does not have access to. If a user attempts to download a report they do not have access to, they will receive an error message.
 
 ### Features
 
