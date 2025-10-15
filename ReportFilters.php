@@ -372,7 +372,7 @@ class ReportFilters extends AbstractExternalModule
             // if value contains a quote, comma, or newline, it must be quoted
             if (strpos($value, '"') !== false || strpos($value, ',') !== false || strpos($value, "\n") !== false) {
                 // Escape any existing quotes by doubling them
-                return writeCSV([$value]);
+                return trim(writeCSV([$value]));
             }
             return $value;
         }
