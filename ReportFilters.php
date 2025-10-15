@@ -348,7 +348,7 @@ class ReportFilters extends AbstractExternalModule
 
         function writeCSV($rows=[], $delimiter=',', $enclosure='"', $escape_char="\\")
         {
-            $fp = fopen('php://memory', "x+");
+            $fp = fopen('php://memory', "w+");
             // Loop through array and output line as CSV
             if (is_array($rows[0]))
             {
