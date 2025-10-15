@@ -1,3 +1,9 @@
+# 1.0.10 (2025-10-15)
+
+### Bug Fixes
+
+- CSV Format: Fixed issue where certain characters (like commas) in field values were not properly escaped in the CSV export, leading to formatting issues when opened in spreadsheet software.
+
 # 1.0.9 (2025-09-26)
 
 ### Non-Breaking "Breaking" Changes
