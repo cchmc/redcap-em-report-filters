@@ -384,21 +384,20 @@ class ReportFilters extends AbstractExternalModule
         $rows = explode("\n", $content);
 
         $event_name_column_index = array_search("redcap_event_name", str_getcsv($rows[0]));
-
         $new_rows = [];
         // If event_name is not displayed, remove the column from all rows
         if($event_name_column_index !== false && $event_name_displayed == 'false'){
             foreach ($rows as &$row) {
+                // return is_array($row);
                 $row = str_getcsv($row);
                 unset($row[$event_name_column_index]);
-                $new_rows[] = array_values($row);
+                $new_rows[] = writeCSV(array_values($row));
             }
             unset($row);
         }
         else{
             $new_rows = $rows;
         }
-
         // Replace raw values with labels for specific field types
         $header = str_getcsv(array_shift($new_rows));
         $data = array_map('str_getcsv', $new_rows);
@@ -474,7 +473,7 @@ class ReportFilters extends AbstractExternalModule
                     $header_label[] = quoteIfNeeded($field_label);
                 }
             }
-            $csvHeader[] = $header_label;
+            $csvHeader = $header_label;
         }
         else{
             $csvHeader = $header;
