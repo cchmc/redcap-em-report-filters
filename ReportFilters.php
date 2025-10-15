@@ -295,7 +295,7 @@ class ReportFilters extends AbstractExternalModule
         $report_id = $payload['report_id'];
         $filter_rows = $payload['rows'];
         $rawOrLabel = $payload['rawOrLabel'];
-        $csvContent = "";
+        // $csvContent = "";
         $hashRecordID = false;
 
         $exportCheckboxLabel=true;
@@ -346,8 +346,35 @@ class ReportFilters extends AbstractExternalModule
         $report_fields = ($report['fields']);
 
 
+        function writeCSV($rows=[], $delimiter=',', $enclosure='"', $escape_char="\\")
+        {
+            $fp = fopen('php://memory', "x+");
+            // Loop through array and output line as CSV
+            if (is_array($rows[0]))
+            {
+                foreach ($rows as $row) {
+                    fputcsv($fp, $row, $delimiter, $enclosure, $escape_char);
+                }
+            }
+            else{
+                fputcsv($fp, $rows, $delimiter, $enclosure, $escape_char);
+            }
+            // Open file for reading and output to user
+            fseek($fp, 0);
+            $data = stream_get_contents($fp);
+            fclose($fp);
+            return $data;
+        }
+
         function quoteIfNeeded($value) {
-            return (strpos($value, ',') !== false) ? '"' . $value . '"' : $value;
+            // Quote the value if it contains a comma.
+            // This is necessary for proper CSV formatting.
+            // if value contains a quote, comma, or newline, it must be quoted
+            if (strpos($value, '"') !== false || strpos($value, ',') !== false || strpos($value, "\n") !== false) {
+                // Escape any existing quotes by doubling them
+                return writeCSV([$value]);
+            }
+            return $value;
         }
 
         $field_types = array();
@@ -359,18 +386,12 @@ class ReportFilters extends AbstractExternalModule
         $event_name_column_index = array_search("redcap_event_name", str_getcsv($rows[0]));
 
         $new_rows = [];
+        // If event_name is not displayed, remove the column from all rows
         if($event_name_column_index !== false && $event_name_displayed == 'false'){
             foreach ($rows as &$row) {
                 $row = str_getcsv($row);
                 unset($row[$event_name_column_index]);
-                $row = array_values($row);
-                // Rebuild the row, and quoteIfNeeded each value
-                $new_row = [];
-                foreach ($row as $value) {
-                    $new_row[] = quoteIfNeeded($value);
-                }
-                $row = implode(",", $new_row);
-                $new_rows[] = $row;
+                $new_rows[] = array_values($row);
             }
             unset($row);
         }
@@ -387,10 +408,9 @@ class ReportFilters extends AbstractExternalModule
         foreach ($filter_rows as $x) {
             $filtered_date[] = $data[$x];
         }
+        $csvHeader=[];
 
-
-        // echo $event_name_displayed . "\n";
-
+        // replace values with labels for header
         if ($_POST['rawOrLabel'] == 'label'){
             $header_label = [];
             foreach ($header as $field) {
@@ -454,15 +474,14 @@ class ReportFilters extends AbstractExternalModule
                     $header_label[] = quoteIfNeeded($field_label);
                 }
             }
-            $csvContent .=  implode(",", $header_label)."\n";
+            $csvHeader[] = $header_label;
         }
         else{
-            $csvContent .= implode(",", $header)."\n";
-            // echo implode(",", $header)."\n";
+            $csvHeader = $header;
         }
 
+        // Replace values with labels for specific field types
         if ($_POST['rawOrLabel'] == 'label'){
-            
             foreach ($filtered_date as &$row) {
                 foreach ($row as $index => &$value) {
                     $field = $header[$index];
@@ -486,12 +505,12 @@ class ReportFilters extends AbstractExternalModule
             }
             unset($row);
         }
+        $csvContent = writeCSV($csvHeader);
 
         // Rebuild the content with replaced values
         foreach ($filtered_date as $row) {
-            $csvContent .= implode(",", $row) . "\n";
+            $csvContent .= writeCSV($row);
         }
-
         return $csvContent;
 
     }
