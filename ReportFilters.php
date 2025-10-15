@@ -388,7 +388,6 @@ class ReportFilters extends AbstractExternalModule
         // If event_name is not displayed, remove the column from all rows
         if($event_name_column_index !== false && $event_name_displayed == 'false'){
             foreach ($rows as &$row) {
-                // return is_array($row);
                 $row = str_getcsv($row);
                 unset($row[$event_name_column_index]);
                 $new_rows[] = writeCSV(array_values($row));
